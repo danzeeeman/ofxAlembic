@@ -190,30 +190,30 @@ void PolyMesh::get(OPolyMeshSchema &schema) const
 		}
 
 		{
-			const vector<ofVec3f>& verts = mesh.getVertices();
+			auto& verts = mesh.getVertices();
 			positions.resize(num_samples);
 
 			for (int i = 0; i < num_samples; i++)
-				positions[i] = toAbc(verts[idx[i]]);
+				positions[i] = toAbc(toOf(verts[idx[i]]));
 		}
 
 		if (mesh.getNumTexCoords() == mesh.getNumVertices())
 		{
-			const vector<ofVec2f> &v = mesh.getTexCoords();
+			auto&v = mesh.getTexCoords();
 
 			uvs.resize(num_samples);
 			for (int i = 0; i < num_samples; i++)
-				uvs[i] = toAbc(v[idx[i]]);
+				uvs[i] = toAbc(toOf(v[idx[i]]));
 		}
 		assert(uvs.size() == 0 || uvs.size() == num_samples);
 
 		if (mesh.getNumNormals() == mesh.getNumVertices())
 		{
-			const vector<ofVec3f> &v = mesh.getNormals();
+			auto &v = mesh.getNormals();
 
 			norms.resize(num_samples);
 			for (int i = 0; i < num_samples; i++)
-				norms[i] = toAbc(v[idx[i]].getNormalized() * -1);
+				norms[i] = toAbc(toOf(v[idx[i]]).getNormalized() * -1);
 		}
 		assert(norms.size() == 0 || norms.size() == num_samples);
 	}
@@ -228,30 +228,30 @@ void PolyMesh::get(OPolyMeshSchema &schema) const
 		}
 
 		{
-			const vector<ofVec3f>& verts = mesh.getVertices();
+			auto& verts = mesh.getVertices();
 			positions.resize(num_samples);
 
 			for (int i = 0; i < num_samples; i++)
-				positions[i] = toAbc(verts[i]);
+				positions[i] = toAbc(toOf(verts[i]));
 		}
 
 		if (mesh.getNumTexCoords() == num_samples)
 		{
-			const vector<ofVec2f> &v = mesh.getTexCoords();
+			auto &v = mesh.getTexCoords();
 
 			uvs.resize(num_samples);
 			for (int i = 0; i < num_samples; i++)
-				uvs[i] = toAbc(v[i]);
+				uvs[i] = toAbc(toOf(v[i]));
 		}
 		assert(uvs.size() == 0 || uvs.size() == num_samples);
 
 		if (mesh.getNumNormals() == num_samples)
 		{
-			const vector<ofVec3f> &v = mesh.getNormals();
+			auto &v = mesh.getNormals();
 
 			norms.resize(num_samples);
 			for (int i = 0; i < num_samples; i++)
-				norms[i] = toAbc(v[i].getNormalized() * -1);
+				norms[i] = toAbc(toOf(v[i]).getNormalized() * -1);
 		}
 		assert(norms.size() == 0 || norms.size() == num_samples);
 	}
@@ -356,10 +356,10 @@ void PolyMesh::set(IPolyMeshSchema &schema, float time)
 	{
 		const V3f* points = m_meshP->get();
 		const int32_t* indices = m_meshIndices->get();
-		vector<ofVec3f>& dst = mesh.getVertices();
+		auto & dst = mesh.getVertices();
 		dst.resize(m_triangles.size() * 3);
 		
-		ofVec3f* dst_ptr = dst.data();
+		auto* dst_ptr = dst.data();
 
 		for (int i = 0; i < m_triangles.size(); i++)
 		{
@@ -388,10 +388,10 @@ void PolyMesh::set(IPolyMeshSchema &schema, float time)
 			{
 				N3fArraySamplePtr norm_ptr = N.getExpandedValue(ss).getVals();
 				const N3f* src = norm_ptr->get();
-				vector<ofVec3f>& dst = mesh.getNormals();
+				auto& dst = mesh.getNormals();
 				dst.resize(m_triangles.size() * 3);
 				
-				ofVec3f* dst_ptr = dst.data();
+				auto* dst_ptr = dst.data();
 
 				for (int i = 0; i < m_triangles.size(); i++)
 				{
@@ -422,10 +422,10 @@ void PolyMesh::set(IPolyMeshSchema &schema, float time)
 			{
 				V2fArraySamplePtr uv_ptr = UV.getExpandedValue(ss).getVals();
 				const V2f* src = uv_ptr->get();
-				vector<ofVec2f>& dst = mesh.getTexCoords();
+				auto& dst = mesh.getTexCoords();
 				dst.resize(m_triangles.size() * 3);
 				
-				ofVec2f* dst_ptr = dst.data();
+				auto* dst_ptr = dst.data();
 
 				for (int i = 0; i < m_triangles.size(); i++)
 				{
@@ -470,7 +470,7 @@ void Curves::get(OCurvesSchema &schema) const
 
 		for (int i = 0; i < polyline.size(); i++)
 		{
-			positions.push_back(toAbc(polyline[i]));
+			positions.push_back(toAbc(toOf(polyline[i])));
 		}
 
 		num_vertices.push_back(polyline.size());
@@ -574,9 +574,15 @@ void Camera::updateParams(ofCamera &camera, ofMatrix4x4 xform)
 	float fovH = sample.getFieldOfView();
 	float fovV = ofRadToDeg(2 * atanf(tanf(ofDegToRad(fovH) / 2) * (h / w)));
 	camera.setFov(fovV);
-	camera.setTransformMatrix(xform);
-	
-	// TODO: lens offset
+    ofVec3f position;
+    ofQuaternion orientation;
+    ofVec3f scale;
+    ofQuaternion so;
+    xform.decompose(position, orientation, scale, so);
+    camera.setPosition(position);
+    camera.setOrientation(orientation);
+    camera.setScale(scale);
+
 }
 
 void Camera::draw()

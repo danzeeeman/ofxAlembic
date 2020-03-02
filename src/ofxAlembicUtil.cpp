@@ -16,21 +16,21 @@ void ofxAlembic::init()
 
 void ofxAlembic::transform(ofMesh &mesh, const ofMatrix4x4 &m)
 {
-	vector<ofVec3f>& vertices = mesh.getVertices();
+	auto& vertices = mesh.getVertices();
 
 	for (int i = 0; i < vertices.size(); i++)
 	{
-		vertices[i] = vertices[i] * m;
+		vertices[i] = toGlm(toOf(vertices[i]) * m);
 	}
 
 	if (mesh.hasNormals())
 	{
-		vector<ofVec3f>& normals = mesh.getNormals();
+		auto& normals = mesh.getNormals();
 
 		for (int i = 0; i < normals.size(); i++)
 		{
 			const ofVec3f& v = normals[i];
-			normals[i] = ofVec4f(v.x, v.y, v.z, 0) * m;
+			normals[i] = toGlm(ofVec4f(v.x, v.y, v.z, 0) * m);
 		}
 	}
 }
